@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+
+import os.path
+import sys
+import time
+import json
+
+__version__ = '0.0.1'
+
+try:
+    input = raw_input
+except NameError:
+    pass
+
+class Stash(object):
+    __stash_file_name = '.stash.json'
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def get_stash_file():
+        stash_file = os.path.join(Stash.get_user_home(), Stash.__stash_file_name)
+        return stash_file
+    
+    @staticmethod
+    def get_user_home():
+        return os.path.expanduser('~')
+
+    @staticmethod
+    def available():
+        stash_file = Stash.get_stash_file()
+        if not os.path.exists(stash_file):
+            return False
+        statinfo = os.stat(stash_file)
+        return False if statinfo.st_size <= 0 else True
+
+    @staticmethod
+    def load():
+        stash_file = Stash.get_stash_file()
+        with open(stash_file) as f:
+            return json.load(f)
+
+    @staticmethod
+    def dump(obj):
+        stash_file = Stash.get_stash_file()
+        with open(stash_file, 'w') as f:
+            json.dump(obj, f)
+
+    @staticmethod
+    def print_entry(entry):
+        print(entry['command'] + '\t' + entry['title'])
+
+    def start(self, args):
+        if len(args) < 1:
+            usage()
+            exit(1)
+
+        command = args[0]
+        opt = args[1:]
+        if command == 'add':
+            self.add(opt)
+        elif command == 'list':
+            self.list(opt)
+        elif command == 'clean':
+            self.clean(opt)
+        elif command == 'search':
+            self.search(opt)
+        else:
+            usage()
+            exit(1)
+
+    def clean(self, opt):
+        os.remove(Stash.get_stash_file())
+
+    def add(self, opt):
+        title = input('Title: ')
+        command = input('Command: ')
+        stash_file = Stash.get_stash_file()
+        if not Stash.available():
+            stash = {}
+        else:
+            stash = Stash.load()
+       
+        ts = int(time.time() * 1000)
+        stash[ts] = {
+                'title': title,
+                'command': command, 
+                }
+        Stash.dump(stash)
+
+    def list(self, opt):
+        if Stash.available():
+            stash = Stash.load()
+            for k in sorted(stash, reverse=True):
+                Stash.print_entry(stash[k])
+
+    def search(self, opt):
+        if Stash.available() and len(opt) > 0:
+            import re
+            pattern = opt[0]
+            stash = Stash.load()
+            for k in sorted(stash, reverse=True):
+                content = stash[k]['command'] + stash[k]['title']
+                if re.search(pattern, content):
+                    Stash.print_entry(stash[k])
+
+
+def usage():
+    print("""
+usage: stash <command> [<args>]
+
+These are common stash commands:
+    list        List what commands in the stash
+    add         Add a command to stash
+    search      search a command by keywords
+    clean       Clean up stash
+""")
+
+if __name__ == '__main__':
+    stash = Stash()
+    stash.start(sys.argv[1:])
