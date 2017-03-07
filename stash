@@ -64,30 +64,35 @@ class StashItem(object):
     def tag(self):
         return self._tag
 
-    @tag.setter
-    def tag(self, tag):
-        self._tag = tag
-
     @property
     def time(self):
-        return _time
+        return self._time
+
+    @time.setter
+    def time(self, time):
+        self._time = time
+
+    def _format_date(self):
+        from datetime import datetime
+        return datetime.fromtimestamp(self._time).strftime('%Y-%m-%d %H:%M:%S')
 
     def pprint(self):
-        print('\033[1m' + '[' + self.tag + ' *' + self.hash + ']' + '\033[0m')
+        print('\033[1m' + '[' + self.tag + '][' + self._format_date() + \
+              '][' + self._hash + ']' + '\033[0m')
         print(self.command)
 
 
 class Stash(object):
 
     def __init__(self):
-        self.__stash_file = (os.environ['STASH_FILE'] if 'STASH_FILE' in os.environ else os.path.join(
+        self.__stash_file=(os.environ['STASH_FILE'] if 'STASH_FILE' in os.environ else os.path.join(
             os.path.expanduser('~'), '.stash'))
-        self.__stash = self._load()
+        self.__stash=self._load()
 
     def _available(self):
         if not os.path.exists(self.__stash_file):
             return False
-        stat_info = os.stat(self.__stash_file)
+        stat_info=os.stat(self.__stash_file)
         return False if stat_info.st_size <= 0 else True
 
     def _load(self):
@@ -101,7 +106,7 @@ class Stash(object):
         with open(self.__stash_file, 'wb') as f:
             pickle.dump(self.__stash, f)
 
-    def _get_input(self, prompt, defaults=''):
+    def _get_input(self, prompt, defaults = ''):
         import readline
         readline.set_startup_hook(lambda: readline.insert_text(defaults))
         try:
@@ -125,7 +130,7 @@ class Stash(object):
         os.remove(self.__stash_file)
 
     def list(self, opt):
-        for i, item in enumerate(self.__stash.values()):
+        for i, item in enumerate(sorted(self.__stash.values(), key=lambda x: x.time, reverse=True)):
             if i > 0:
                 print(console_width * '-')
             item.pprint()
@@ -136,21 +141,22 @@ class Stash(object):
             return
 
         import re
-        pattern = opt[0]
-        i = 0
-        for item in self.__stash.values():
-            content = item.tag + item.command
+        pattern=opt[0]
+        i=0
+        for item in sorted(self.__stash.values(), key=lambda x: x.time, reverse=True):
+            content=item.tag + item.command
             if re.search(pattern, content):
                 if i > 0:
                     print(console_width * '-')
                 item.pprint()
+                i += 1
 
     def delete(self, opt):
         if len(opt) < 1:
             print('usage: stash delete <hashcode>')
             return
 
-        hashcode = opt[0]
+        hashcode=opt[0]
         if hashcode is not None:
             self.__stash.pop(hashcode)
             self._save()
@@ -160,11 +166,12 @@ class Stash(object):
             print('usage: stash update <hashcode>')
             return
 
-        hashcode = opt[0]
+        hashcode=opt[0]
         if hashcode is not None and hashcode in self.__stash:
-            item = self.__stash[hashcode]
+            item=self.__stash[hashcode]
             try:
-                item.command = self._get_input('Command: ', item.command)
+                item.command=self._get_input('Command: ', item.command)
+                item.time = time.time()
                 self._save()
             except KeyboardInterrupt:
                 pass
@@ -174,19 +181,20 @@ class Stash(object):
             print('usage: stash exec <hashcode>')
             return
 
-        hashcode = opt[0]
+        hashcode=opt[0]
         if hashcode is not None and hashcode in self.__stash:
-            item = self.__stash[hashcode]
+            item=self.__stash[hashcode]
             try:
-                command = self._get_input(
+                command=self._get_input(
                     'Execute(Ctrl-C to cancel): ', item.command)
             except KeyboardInterrupt:
                 print('\nCancelled')
             else:
-                rc = os.system(command)
+                rc=os.system(command)
                 # if successful, save this command back to stash
                 if rc >> 8 == 0:
                     item.command = command
+                    item.time = time.time()
                     self._save()
 
     def start(self, args):
@@ -194,7 +202,7 @@ class Stash(object):
             usage()
             return
 
-        options = {
+        options={
             'add': self.add,
             'list': self.list,
             'search': self.search,
