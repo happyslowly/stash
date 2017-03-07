@@ -105,7 +105,8 @@ class Stash(object):
 
     def _save(self):
         with open(self.__stash_file, 'wb') as f:
-            pickle.dump(self.__stash, f)
+            # to support python2
+            pickle.dump(self.__stash, f, protocol=2)
 
     def _get_input(self, prompt, defaults=''):
         import readline
@@ -118,8 +119,8 @@ class Stash(object):
             readline.set_startup_hook()
 
     def add(self, opt):
-        tag = self._get_input('Tag: ')
         try:
+            tag = self._get_input('Tag: ')
             command = self._get_input('Command: ')
             item = StashItem(tag, command)
             self.__stash[item.hash] = item
@@ -128,7 +129,10 @@ class Stash(object):
             pass
 
     def clean(self, opt):
-        os.remove(self.__stash_file)
+        try:
+            os.remove(self.__stash_file)
+        except OSError:
+            pass
 
     def list(self, opt):
         top = -1
@@ -189,7 +193,7 @@ class Stash(object):
             except KeyboardInterrupt:
                 pass
 
-    def exec(self, opt):
+    def execute(self, opt):
         if len(opt) < 1 or opt[0] == '-h':
             print('usage: stash exec <hashcode>')
             return
@@ -219,7 +223,7 @@ class Stash(object):
             'add': self.add,
             'list': self.list,
             'search': self.search,
-            'exec': self.exec,
+            'exec': self.execute,
             'update': self.update,
             'delete': self.delete,
             'clean': self.clean,
