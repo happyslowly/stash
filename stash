@@ -112,9 +112,9 @@ class Stash(object):
         import readline
         readline.set_startup_hook(lambda: readline.insert_text(defaults))
         try:
-            return input(prompt)
-        except NameError:
             return raw_input(prompt)
+        except NameError:
+            return input(prompt)
         finally:
             readline.set_startup_hook()
 
