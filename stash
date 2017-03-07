@@ -77,8 +77,9 @@ class StashItem(object):
         return datetime.fromtimestamp(self._time).strftime('%Y-%m-%d %H:%M:%S')
 
     def pprint(self):
-        print('\033[1m' + '[' + self.tag + '][' + self._format_date() +
-              '][' + self._hash + ']' + '\033[0m')
+        space = console_width - (len(self.tag) + len(self._format_date()) + len(self._hash) + 6)
+        print('\033[1m[{0}][{1}]{2}[{3}]\033[0m'.format(self.tag, self._format_date(),
+            ' ' * space, self._hash))
         print(self.command)
 
 
