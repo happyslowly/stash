@@ -152,9 +152,12 @@ class Stash(object):
     def exec(self, opt):
         hashcode = opt[0]
         if hashcode is not None and hashcode in self.__stash:
-            command = self.__stash[hashcode].command
-            answer = input('Execute: ' + command + ' ?[Y/n]')
-            if answer.strip().lower() != 'n':
+            item = self.__stash[hashcode]
+            try:
+                command = self._get_input('Execute(Ctrl-C to cancel): ', item.command)
+            except KeyboardInterrupt:
+                print('\nCancelled')
+            else:
                 os.system(command)
 
     def start(self, args):
