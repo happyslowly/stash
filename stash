@@ -126,6 +126,10 @@ class Stash(object):
             item.pprint()
 
     def search(self, opt):
+        if len(opt) < 1:
+            print('usage: stash search <hashcode>')
+            return
+
         import re
         pattern = opt[0]
         i = 0
@@ -137,12 +141,20 @@ class Stash(object):
                 item.pprint()
 
     def delete(self, opt):
+        if len(opt) < 1:
+            print('usage: stash delete <hashcode>')
+            return
+
         hashcode = opt[0]
         if hashcode is not None:
             self.__stash.pop(hashcode)
             self._save()
 
     def update(self, opt):
+        if len(opt) < 1:
+            print('usage: stash update <hashcode>')
+            return
+
         hashcode = opt[0]
         if hashcode is not None and hashcode in self.__stash:
             item = self.__stash[hashcode]
@@ -150,6 +162,10 @@ class Stash(object):
             self._save()
 
     def exec(self, opt):
+        if len(opt) < 1:
+            print('usage: stash exec <hashcode>')
+            return
+
         hashcode = opt[0]
         if hashcode is not None and hashcode in self.__stash:
             item = self.__stash[hashcode]
@@ -163,7 +179,7 @@ class Stash(object):
     def start(self, args):
         if len(args) < 1:
             usage()
-            exit(1)
+            return
 
         options = {
             'add': self.add,
@@ -182,7 +198,6 @@ class Stash(object):
             action(opt)
         else:
             usage()
-            exit(1)
 
 
 if __name__ == '__main__':
