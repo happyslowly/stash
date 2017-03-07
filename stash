@@ -40,6 +40,7 @@ console_width = get_console_width()
 
 
 class StashItem(object):
+
     def __init__(self, tag, command):
         self._command = command
         # take first 8 characters, it should be enough for this toy tool
@@ -77,6 +78,7 @@ class StashItem(object):
 
 
 class Stash(object):
+
     def __init__(self):
         self.__stash_file = (os.environ['STASH_FILE'] if 'STASH_FILE' in os.environ else os.path.join(
             os.path.expanduser('~'), '.stash'))
@@ -176,7 +178,8 @@ class Stash(object):
         if hashcode is not None and hashcode in self.__stash:
             item = self.__stash[hashcode]
             try:
-                command = self._get_input('Execute(Ctrl-C to cancel): ', item.command)
+                command = self._get_input(
+                    'Execute(Ctrl-C to cancel): ', item.command)
             except KeyboardInterrupt:
                 print('\nCancelled')
             else:
