@@ -111,10 +111,13 @@ class Stash(object):
 
     def add(self, opt):
         tag = self._get_input('Tag: ')
-        command = self._get_input('Command: ')
-        item = StashItem(tag, command)
-        self.__stash[item.hash] = item
-        self._save()
+        try:
+            command = self._get_input('Command: ')
+            item = StashItem(tag, command)
+            self.__stash[item.hash] = item
+            self._save()
+        except KeyboardInterrupt:
+            pass
 
     def clean(self, opt):
         os.remove(self.__stash_file)
@@ -158,8 +161,11 @@ class Stash(object):
         hashcode = opt[0]
         if hashcode is not None and hashcode in self.__stash:
             item = self.__stash[hashcode]
-            item.command = self._get_input('Command: ', item.command)
-            self._save()
+            try:
+                item.command = self._get_input('Command: ', item.command)
+                self._save()
+            except KeyboardInterrupt:
+                pass
 
     def exec(self, opt):
         if len(opt) < 1:
@@ -174,7 +180,11 @@ class Stash(object):
             except KeyboardInterrupt:
                 print('\nCancelled')
             else:
-                os.system(command)
+                rc = os.system(command)
+                # if successful, save this command back to stash
+                if rc >> 8 == 0:
+                    item.command = command
+                    self._save()
 
     def start(self, args):
         if len(args) < 1:
